@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
     images: {
-        domains: ['covers.openlibrary.org'],
-        domains: ['ui-avatars.com'],
+        domains: ['covers.openlibrary.org', 'ui-avatars.com'],
       },
 };
 

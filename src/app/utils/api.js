@@ -1,19 +1,34 @@
 import axios from "axios";
-const Base_URL = "https://openlibrary.org";
+const BASE_URL = "https://openlibrary.org";
 
 export const searchBooks = async (query) => {
-  const response = await axios.get(`${Base_URL}/search.json`, {
-    params: { q: query, limit: 20 },
-  });
-  return response.data.docs;
+  try {
+    const response = await axios.get(`${BASE_URL}/search.json`, {
+      params: { q: query, limit: 20 },
+    });
+    return response.data.docs;
+  } catch (error) {
+    console.error("Error searching books:", error);
+    throw error;
+  }
 };
 
-export const getBookDetails = async (id) => {
-  const response = await axios.get(`${Base_URL}/works/${id}.json`);
-  return response.data;
+export const getBookDetails = async (work_id) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/works/${work_id}.json`);
+    return response.data;
+  } catch (error) {
+    console.error("Error getting book details:", error);
+    throw error;
+  }
 };
 
 export const getRecentBooks = async () => {
-  const response = await axios.get(`${Base_URL}/trending/daily.json`);
-  return response.data.works.slice(0, 6);
+  try {
+    const response = await axios.get(`${BASE_URL}/trending/daily.json`);
+    return response.data.works.slice(0, 6);
+  } catch (error) {
+    console.error("Error getting recent books:", error);
+    throw error;
+  }
 };

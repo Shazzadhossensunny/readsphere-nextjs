@@ -15,7 +15,6 @@ export default function Home() {
           <AuthorSpotlight />
           <TopRatedBooks />
           <GenreSection />
-          <TopRatedBooks />
           <RecentReviews />
           <CallToAction />
 
