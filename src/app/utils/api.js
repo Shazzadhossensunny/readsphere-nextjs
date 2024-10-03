@@ -1,6 +1,6 @@
 import axios from "axios";
 const BASE_URL = "https://openlibrary.org";
-
+// search books
 export const searchBooks = async (query) => {
   try {
     const response = await axios.get(`${BASE_URL}/search.json`, {
@@ -12,7 +12,7 @@ export const searchBooks = async (query) => {
     throw error;
   }
 };
-
+// get book details
 export const getBookDetails = async (work_id) => {
   try {
     const response = await axios.get(`${BASE_URL}/works/${work_id}.json`);
@@ -22,7 +22,7 @@ export const getBookDetails = async (work_id) => {
     throw error;
   }
 };
-
+// get recent books
 export const getRecentBooks = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/trending/daily.json`);
