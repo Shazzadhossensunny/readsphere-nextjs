@@ -1,83 +1,112 @@
-"use client";
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+'use client'
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Image from 'next/image';
 
-const AuthorSpotlight = ({ authorKey }) => {
+const BASE_URL = "https://openlibrary.org";
+
+const AuthorSpotlight = ({ authorId }) => {
   const [author, setAuthor] = useState(null);
+  const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAuthor = async () => {
-    setLoading(true);
-    setError(null);
-
-    if (!authorKey) {
-      setError("No author key provided");
+  useEffect(() => {
+    if (!authorId) {
+      setError('Author ID is undefined.');
       setLoading(false);
       return;
     }
 
-    try {
-      const url = `https://openlibrary.org/authors/${authorKey}.json`;
-      console.log('Fetching author data from:', url);
-      const response = await fetch(url);
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`Author not found. Please check the author key.`);
+    const fetchAuthorData = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/authors/${authorId}.json`);
+        if (!res.ok) {
+          throw new Error(`Error: ${res.status} ${res.statusText}`);
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await res.json();
+        if (!data || Object.keys(data).length === 0) {
+          throw new Error('Author not found');
+        }
+
+        setAuthor(data);
+
+        // Fetch works separately
+        const worksData = await fetchAuthorWorks(authorId);
+        setWorks(worksData);
+      } catch (error) {
+        console.error("Error fetching author data:", error);
+        setError(error.message);
+        setAuthor(null);
+      } finally {
+        setLoading(false);
       }
-      const data = await response.json();
-      console.log('Received author data:', data);
-      setAuthor(data);
-    } catch (err) {
-      console.error('Error fetching author data:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  useEffect(() => {
-    fetchAuthor();
-  }, [authorKey]);
+    const fetchAuthorWorks = async (authorId) => {
+      try {
+        const res = await fetch(`${BASE_URL}/authors/${authorId}/works.json`);
+        if (!res.ok) {
+          throw new Error(`Error fetching works: ${res.status} ${res.statusText}`);
+        }
+        const worksData = await res.json();
+        return worksData.entries || [];
+      } catch (error) {
+        console.error("Error fetching works:", error);
+        return [];
+      }
+    };
 
-  if (loading) return <div>Loading author information...</div>;
-  if (error) return (
-    <Card className="w-[300px]">
-      <CardContent>
-        <p className="text-red-500">Error: {error}</p>
-        <p className="text-sm mt-2">Author key: {authorKey || 'Not provided'}</p>
-        <p className="text-sm mt-2">
-          {!authorKey
-            ? "Please provide a valid author key."
-            : "Please check the author key and try again."}
-        </p>
-        {authorKey && <Button className="mt-4" onClick={fetchAuthor}>Retry</Button>}
-      </CardContent>
-    </Card>
-  );
-  if (!author) return null;
+    fetchAuthorData();
+  }, [authorId]);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  if (!author) {
+    return <p>Author not found.</p>;
+  }
 
   return (
-    <Card className="w-[300px]">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-4">
-          <Avatar>
-            <AvatarImage src={`https://covers.openlibrary.org/a/olid/${author.key.split('/').pop()}-M.jpg`} alt={author.name} />
-            <AvatarFallback>{author.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-          </Avatar>
-          <span>{author.name}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm">{author.bio?.value || author.bio || 'No biography available.'}</p>
-        {author.birth_date && <p className="text-xs mt-2">Born: {author.birth_date}</p>}
-        {author.death_date && <p className="text-xs">Died: {author.death_date}</p>}
-      </CardContent>
-    </Card>
+    <section className="my-12 mx-auto max-w-6xl p-4">
+      <h2 className="text-3xl font-bold text-center mb-8">Author Spotlight</h2>
+      <Card className="mx-auto my-8 max-w-4xl p-6 bg-white shadow-lg">
+        <CardHeader>
+          <CardTitle>{author.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-6">
+            <Image
+              src={author.photos && author.photos.length > 0
+                ? `https://covers.openlibrary.org/a/id/${author.photos[0]}-M.jpg`
+                : 'https://covers.openlibrary.org/a/id/14418219-M.jpg'}
+              alt={author.name || 'Author'}
+              width={200}
+              height={300}
+              className="rounded-lg object-cover w-[200px] h-[300px]"
+            />
+            <div>
+              <p className="mb-4 text-lg">{author.bio || 'Biography not available.'}</p>
+              <h3 className="font-semibold text-lg">Works:</h3>
+              <ul className="list-disc ml-6">
+                {works.length > 0 ? (
+                  works.map((work, index) => (
+                    <li key={index}>{work.title}</li>
+                  ))
+                ) : (
+                  <li>No works available</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </section>
   );
 };
 
