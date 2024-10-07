@@ -9,7 +9,7 @@ import TopRatedBooks from "./components/home/TopRatedBooks";
 
 
 export default function Home() {
-  const authorId = "OL23919A";
+  // const authorId = "OL23919A";
   return (
         <>
           <HeroSection />
